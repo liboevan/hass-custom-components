@@ -2,7 +2,7 @@
 
 ## Weather Sensor - He Weather
 
-You need an API key which is free but requires [registration](www.heweather.com). YOu can make up to 3000 calls per day for free.
+You need an API key which is free but requires [registration](www.heweather.com). You can make up to 3000 calls per day for free.
 
 * This plugin invokes the API `https://free-api.heweather.com/v5/weather?city=yourcity&key=yourkey` for Chinese cities only.
 
@@ -49,7 +49,7 @@ Configuration variables:
 
 * `forecast` array (Optional): List of days in the 3 day forecast you would like to receive data on, starting with tomorrow as day 1. Any `monitored_condition` which a daily forecast by HeWeather will generate a sensor. The sensor wll tagged with `_tomorrow` or `after_tomorrow`.
 
-* `lang` (Optional): Which language you would the result to be. Default to `zh-cn`.
+* `lang` (Optional): Which language you would the result to be. Default to `zh-cn`. See more[here](https://www.heweather.com/documents/i18n).
 
 * `monitored_conditions` array (Required): Conditions to display in the frontend.
 
@@ -71,7 +71,7 @@ Configuration variables:
 
     `daily_tmp_max`: Day’s expected high temperature.
 
-    `daily_tmp_max`: Day’s expected low temperature.
+    `daily_tmp_min`: Day’s expected low temperature.
 
     `daily_vis`: The average visibility.
 
@@ -82,9 +82,3 @@ Configuration variables:
     `daily_wind_sc`: The wind scale.
 
     `daily_wind_spd`: The wind speed.
-
-
-
-
-
-
