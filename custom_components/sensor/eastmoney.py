@@ -118,13 +118,18 @@ class EastmoneySensor(Entity):
             return
         est_nav = self.fund_data.data['est_nav']
         self._state = est_nav['enav']
-        growth = float(est_nav['enav_growth'])
-        if growth > 0:
-            self._trend = 1
-        elif growth < 0:
-            self._trend = -1
-        else:
-            self._trend = 0
+
+        try:
+            growth = float(est_nav['enav_rate'][0:-1])
+            if growth > 0:
+                self._trend = 1
+            elif growth < 0:
+                self._trend = -1
+            else:
+                self._trend = 0
+        except:
+            _LOGGER.error('Invalid enav_rate: %s', est_nav['enav_rate'])
+
 
 class EastmoneyData(object):
     """Get the latest data from Eastmoney."""
@@ -214,9 +219,13 @@ class EastmoneyData(object):
             rct_1year = rct_1year.text
         if nav is None or nav_time is None:
             return None
-        # Correct the growth
-        if float(nav_rate[0:-1]) < 0:
+        # For the case: growth symbol is incorrect but trending down. 
+        if float(nav_rate[0:-1]) < 0 and not nav_growth.startswith('-'):
             nav_growth = '-' + nav_growth
+        # For the case: both symbol and growth value are incorrect some of the time.
+        if nav_growth.startswith('+-') or nav_growth.startswith('-+'):
+            nav_growth = 'unknown'
+            
         return {'enav_time': nav_time, 'enav': nav, 'enav_growth': nav_growth, 'enav_rate': nav_rate, 'rct_1month': rct_1month, 'rct_1year': rct_1year}
 
     def _get_nav(self, nav_data):
