@@ -1,13 +1,17 @@
 '''
 # Module name:
     eastmoney.py
+
 # Prerequisite:
     Based on Python 3.4
     Need python module requests and bs4
+
 # Purpose:
     Fund sensor powered by Eastmoney
+
 # Author:
     Retroposter retroposter@outlook.com
+    
 # Created:
     Aug.31th 2017
 '''
