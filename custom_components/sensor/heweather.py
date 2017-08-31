@@ -30,7 +30,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'He Weather'
 ATTRIBUTION = 'Powered by He Weather'
@@ -256,8 +256,8 @@ class HeWeatherSensor(Entity):
                         data = now_data['wind'][key]
                     else:
                         data = now_data[key]
-                    attrs[value] = data
-            
+                    attrs[value] = data        
+        
         return attrs
 
     def update(self):
@@ -334,18 +334,18 @@ class HeWeatherData(object):
         try:
             resp = requests.get(url)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            LOGGER.error("Unable to connect to Dark Sky. %s", error)
+            _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             return
         if resp.status_code != 200:
-            LOGGER.error('http error: %s', resp.status_code)
+            _LOGGER.error('http error: %s', resp.status_code)
             return
         rst_json = resp.json()
         if not 'HeWeather5' in rst_json:
-            LOGGER.error('response error 1.')
+            _LOGGER.error('response error 1.')
             return
         wea_json = rst_json['HeWeather5'][0] 
         if wea_json['status'] != 'ok':
-            LOGGER.error('response error 2.')
+            _LOGGER.error('response error 2.')
             return
 
         self.data = {}

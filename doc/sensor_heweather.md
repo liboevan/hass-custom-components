@@ -47,7 +47,7 @@ Configuration variables:
 
 * `forecast` array (Optional): List of days in the 3 day forecast you would like to receive data on, starting with tomorrow as day 1. Any `monitored_condition` which a daily forecast by HeWeather will generate a sensor. The sensor wll tagged with `_tomorrow` or `after_tomorrow`.
 
-* `lang` (Optional): Which language you would the result to be. Default to `zh-cn`. See more[here](https://www.heweather.com/documents/i18n).
+* `lang` (Optional): Which language you would the result to be. Default to `zh-cn`. See more [here](https://www.heweather.com/documents/i18n).
 
 * `monitored_conditions` array (Required): Conditions to display in the frontend.
 

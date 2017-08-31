@@ -47,7 +47,7 @@ sensor:
 
 * `forecast` 数组 (可选): 需要预报的天数，明天为1，后天为2（免费API支支持3天预报）。`monitored_condition`中所有带`daily`前缀的变量都会被改配置影响。
 
-* `lang` (可选): 语言选项。默认中文`zh-cn`。多语言支持见[这里](https://www.heweather.com/documents/i18n)。
+* `lang` (可选): 语言选项。默认中文`zh-cn`。多语言支持见 [这里](https://www.heweather.com/documents/i18n)。
 
 * `monitored_conditions` 数组 (必选): 将要在页面显示的传感器，至少选择一项。
 

@@ -28,7 +28,7 @@ import xml.etree.ElementTree as ET
 from homeassistant.components.notify import (BaseNotificationService, ATTR_TARGET, ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_IMAGE = 'image'
 ATTR_VIDEO = 'video'
@@ -64,12 +64,12 @@ class WeChatService(BaseNotificationService):
                     file = data.get(ATTR_FILE, None)
                     self.bot.file_helper.send_file(file)
                 else:
-                    LOGGER.error('No image, video or file in data.')
+                    _LOGGER.error('No image, video or file in data.')
             self.bot.file_helper.send_msg(message)
         else:
             for tar in targets:
                 if tar == "":
-                    LOGGER.error('Invalid target.')
+                    _LOGGER.error('Invalid target.')
                     continue
                 # Determine the target is a friend or group.
                 target = tar.split(GROUP_POSTFIX)
@@ -91,7 +91,7 @@ class WeChatService(BaseNotificationService):
                             file = data.get(ATTR_FILE,None)
                             chat.send_file(file)
                         else:
-                            LOGGER.error('No image, video or file in data.')
+                            _LOGGER.error('No image, video or file in data.')
                     chat.send_msg(message)
                 else:
-                    LOGGER.error('Incorrect name of friend or group: %s', target[0])
+                    _LOGGER.error('Incorrect name of friend or group: %s', target[0])
