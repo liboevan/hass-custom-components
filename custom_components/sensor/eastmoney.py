@@ -103,7 +103,8 @@ class EastmoneySensor(Entity):
         nav = self.fund_data.data['nav']
         attrs['last trading day'] = nav['nav_date']
         attrs['last nav'] = nav['nav']
-        attrs['last growth rate'] = nav['nav_rate']        
+        attrs['last growth rate'] = nav['nav_rate']
+        attrs['recent 3 months'] = nav['rct_3month']
         return attrs
 
     def update(self):
@@ -227,7 +228,11 @@ class EastmoneyData(object):
         if nav_rate is None:
             nav_rate = dds[0].find('span', class_='ui-font-middle ui-color-red ui-num')
         rct_3month = dds[1].find('span', class_='ui-font-middle ui-color-green ui-num')
+        if rct_3month is None:
+            rct_3month = dds[1].find('span', class_='ui-font-middle ui-color-red ui-num')
         rct_3year = dds[2].find('span', class_='ui-font-middle ui-color-red ui-num')
+        if rct_3year is None:
+            rct_3year = dds[2].find('span', class_='ui-font-middle ui-color-red ui-num')
         if date is not None:
             date = re.findall(PAT_DATE, date.text)[0]
         if nav is not None:
