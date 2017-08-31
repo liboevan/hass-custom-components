@@ -100,7 +100,6 @@ class EastmoneySensor(Entity):
 
         attrs[ATTR_ATTRIBUTION] = '{0} {1}'.format(self.fund_data.data['last_update'], ATTRIBUTION)
         est_nav = self.fund_data.data['est_nav']
-        attrs['est growth'] = est_nav['enav_growth']
         attrs['est growth rate'] = est_nav['enav_rate']
         attrs['recent 1 month'] = est_nav['rct_1month']
         attrs['recent 1 year'] = est_nav['rct_1year']
@@ -197,7 +196,6 @@ class EastmoneyData(object):
             _LOGGER.error('Element \'dd\' error.')
             return None
         nav = dds[0].find('span', id='gz_gsz')
-        nav_growth = dds[0].find('span', id='gz_gszze')
         nav_rate = dds[0].find('span', id='gz_gszzl')
         rct_1month = dds[1].find('span', class_='ui-font-middle ui-color-green ui-num')
         if rct_1month is None:
@@ -209,8 +207,6 @@ class EastmoneyData(object):
             nav_time = nav_time.text.lstrip('(').rstrip(')')
         if nav is not None:
             nav = nav.text
-        if nav_growth is not None:
-            nav_growth = nav_growth.text
         if nav_rate is not None:
             nav_rate = nav_rate.text
         if rct_1month is not None:
@@ -218,15 +214,8 @@ class EastmoneyData(object):
         if rct_1year is not None:
             rct_1year = rct_1year.text
         if nav is None or nav_time is None:
-            return None
-        # For the case: growth symbol is incorrect but trending down. 
-        if float(nav_rate[0:-1]) < 0 and not nav_growth.startswith('-'):
-            nav_growth = '-' + nav_growth
-        # For the case: both symbol and growth value are incorrect some of the time.
-        if nav_growth.startswith('+-') or nav_growth.startswith('-+'):
-            nav_growth = 'unknown'
-            
-        return {'enav_time': nav_time, 'enav': nav, 'enav_growth': nav_growth, 'enav_rate': nav_rate, 'rct_1month': rct_1month, 'rct_1year': rct_1year}
+            return None          
+        return {'enav_time': nav_time, 'enav': nav, 'enav_rate': nav_rate, 'rct_1month': rct_1month, 'rct_1year': rct_1year}
 
     def _get_nav(self, nav_data):
         date = nav_data.find('dt')
