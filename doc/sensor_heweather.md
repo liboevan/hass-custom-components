@@ -1,8 +1,6 @@
-# Home Assistant Custom Components
+# Weather Sensor - He Weather
 
-## Weather Sensor - He Weather
-
-You need an API key which is free but requires [registration](www.heweather.com). You can make up to 3000 calls per day for free.
+You need an API key which is free but requires [registration](https://www.heweather.com). You can make up to 3000 calls per day for free.
 
 * This plugin invokes the API `https://free-api.heweather.com/v5/weather?city=yourcity&key=yourkey` for Chinese cities only.
 

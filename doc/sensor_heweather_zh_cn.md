@@ -1,6 +1,4 @@
-# Home Assistant Custom Components
-
-## 天气传感器 - 和风天气
+# 天气传感器 - 和风天气
 
 和风天气提供免费版API，但是需要[注册](www.heweather.com)获取API key. 免费版API每天能调用3000次。
 
