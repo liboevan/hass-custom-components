@@ -91,43 +91,44 @@ class EastmoneySensor(Entity):
         return 'mdi:trending-neutral'
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'CNY'
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        if self.fund_data.data is None:
+        data = self.fund_data.data
+        if data is None:
             attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attrs
 
-        attrs[ATTR_ATTRIBUTION] = '{0} {1}'.format(self.fund_data.data['last_update'], ATTRIBUTION)
-        est_nav = self.fund_data.data['est_nav']
-        attrs['est growth rate'] = est_nav['enav_rate']
-        attrs['recent 1 month'] = est_nav['rct_1month']
-        attrs['recent 1 year'] = est_nav['rct_1year']
-        nav = self.fund_data.data['nav']
-        attrs['last trading day'] = nav['nav_date']
-        attrs['last nav'] = nav['nav']
-        attrs['last growth rate'] = nav['nav_rate']
-        attrs['recent 3 months'] = nav['rct_3month']
+        attrs[ATTR_ATTRIBUTION] = '{0} {1}'.format(data['last_update'], ATTRIBUTION)
+        attrs['est growth'] = data['enav_growth']
+        attrs['est growth rate'] = data['enav_rate']
+        attrs['last trading day'] = data['last_trading_day']
+        attrs['last nav'] = data['last_nav']
+        attrs['last growth rate'] = data['last_nav_rate']
+        attrs['recent 1 month'] = data['rct_1month']
+        attrs['recent 3 months'] = data['rct_3month']
         return attrs
 
     def update(self):
         """Get the latest data from He Weather and updates the states."""
         self.fund_data.update()
-        if self.fund_data.data is None:
+        data = self.fund_data.data
+        if data is None:
             return
-        est_nav = self.fund_data.data['est_nav']
-        self._state = est_nav['enav']
-
-        try:
-            growth = float(est_nav['enav_rate'][0:-1])
-            if growth > 0:
-                self._trend = 1
-            elif growth < 0:
-                self._trend = -1
-            else:
-                self._trend = 0
-        except:
-            _LOGGER.error('Invalid enav_rate: %s', est_nav['enav_rate'])
+        enav = data['enav']
+        last_nav = data['last_nav']
+        self._state = enav
+        if enav > last_nav:
+            self._trend = 1
+        elif enav < last_nav:
+            self._trend = -1
+        else:
+            self._trend = 0
 
 
 class EastmoneyData(object):
@@ -183,11 +184,20 @@ class EastmoneyData(object):
         if data_item_01 is None or data_item_02 is None:
             _LOGGER.error('Element \'div,class_=dataItem01|dataItem02\' not found.')
             return
-        est_nav = self._get_estnav(data_item_01)
+
+        enav = self._get_estnav(data_item_01)
         nav = self._get_nav(data_item_02)
-        if est_nav is None or nav is None:
+        if enav is None or nav is None:
             return None
-        return {'est_nav': est_nav, 'nav': nav, 'last_update': est_nav['enav_time']}
+        try:
+            enav_value = float(enav[1])
+            nav_value = float(nav[1])
+            enav_growth = round(enav_value - nav_value, 4)
+            enav_rate = str(round(enav_growth * 100 / nav_value, 2)) + '%'
+            return {'last_update': enav[0], 'enav': enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': nav[0], 'last_nav': nav_value, 'last_nav_rate': nav[2], 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
+        except:
+            _LOGGER.error('Invalid enav_value: %s, or nav_value: %s', enav[1], nav[1])
+            return None
 
     def _get_estnav(self, estnav_data):
         nav_time = estnav_data.find('span', id='gz_gztime')
@@ -196,7 +206,6 @@ class EastmoneyData(object):
             _LOGGER.error('Element \'dd\' error.')
             return None
         nav = dds[0].find('span', id='gz_gsz')
-        nav_rate = dds[0].find('span', id='gz_gszzl')
         rct_1month = dds[1].find('span', class_='ui-font-middle ui-color-green ui-num')
         if rct_1month is None:
             rct_1month = dds[1].find('span', class_='ui-font-middle ui-color-red ui-num')
@@ -207,15 +216,13 @@ class EastmoneyData(object):
             nav_time = nav_time.text.lstrip('(').rstrip(')')
         if nav is not None:
             nav = nav.text
-        if nav_rate is not None:
-            nav_rate = nav_rate.text
         if rct_1month is not None:
             rct_1month = rct_1month.text
         if rct_1year is not None:
             rct_1year = rct_1year.text
         if nav is None or nav_time is None:
             return None          
-        return {'enav_time': nav_time, 'enav': nav, 'enav_rate': nav_rate, 'rct_1month': rct_1month, 'rct_1year': rct_1year}
+        return (nav_time, nav, rct_1month, rct_1year)
 
     def _get_nav(self, nav_data):
         date = nav_data.find('dt')
@@ -247,4 +254,5 @@ class EastmoneyData(object):
             rct_3year = rct_3year.text
         if nav is None or date is None:
             return None     
-        return {'nav_date': date, 'nav': nav, 'nav_rate': nav_rate, 'rct_3month': rct_3month, 'rct_3year': rct_3year}
+        return (date, nav, nav_rate, rct_3month, rct_3year)
+
