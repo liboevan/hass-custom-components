@@ -7,7 +7,7 @@
     Need python module requests and wxpy.
 
 # Purpose:
-    wechat notify powered by wxpy
+    Wechat notify powered by wxpy
 
 # Author:
     Retroposter retroposter@outlook.com
@@ -19,11 +19,12 @@
 REQUIREMENTS = ['wxpy==0.3.9.8','pillow']
 
 import logging
-
-import requests
+import os
 import voluptuous as vol
-from wxpy import *
 import xml.etree.ElementTree as ET
+
+from wxpy import *
+import requests
 
 from homeassistant.components.notify import (BaseNotificationService, ATTR_TARGET, ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -38,12 +39,12 @@ GROUP_POSTFIX = '#group#'
 
 def get_service(hass, config, discovery_info=None):
     # Imagine that the bot is your wechat client.
-    bot = Bot(cache_path='/root/.homeassistant/wxpy.pkl', console_qr=True)
-    myself = bot.self
+    cache_path = os.path.join(os.environ['HOME'], '.homeassistant/wxpy.pkl')
+    bot = Bot(cache_path=cache_path, console_qr=True)
     return WeChatService(bot)
 
 class WeChatService(BaseNotificationService):
-    def __init__(self,bot):
+    def __init__(self, bot):
         """Initialize the service."""
         self.bot = bot
 
