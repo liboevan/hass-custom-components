@@ -39,7 +39,7 @@ GROUP_POSTFIX = '#group#'
 
 def get_service(hass, config, discovery_info=None):
     # Imagine that the bot is your wechat client.
-    cache_path = os.path.join(os.environ['HOME'], '.homeassistant/wxpy.pkl')
+    cache_path = os.path.join(hass.config.path('deps'), 'wxpy.pkl')
     bot = Bot(cache_path=cache_path, console_qr=True)
     return WeChatService(bot)
 
