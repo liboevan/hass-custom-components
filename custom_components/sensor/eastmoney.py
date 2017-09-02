@@ -17,7 +17,7 @@
 '''
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
@@ -189,12 +189,20 @@ class EastmoneyData(object):
         nav = self._get_nav(data_item_02)
         if enav is None or nav is None:
             return None
+        now = datetime.now()
+        enav_time_str = '20' + enav[0]     
         try:
-            enav_value = float(enav[1])
-            nav_value = float(nav[1])
-            enav_growth = round(enav_value - nav_value, 4)
+            real_enav_time = enav_time = datetime.strptime(enav_time_str, "%Y-%m-%d %H:%M")
+            enav_limit_time = enav_time.replace(hour=15, minute=0)
+            real_enav_value = enav_value = float(enav[1])
+            nav_value = float(nav[1])       
+            if now > enav_limit_time:
+                real_enav_time = now
+                if real_enav_time.day != enav_time.day:
+                    real_enav_value = nav_value
+            enav_growth = round(real_enav_value - nav_value, 4)
             enav_rate = str(round(enav_growth * 100 / nav_value, 2)) + '%'
-            return {'last_update': enav[0], 'enav': enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': nav[0], 'last_nav': nav_value, 'last_nav_rate': nav[2], 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
+            return {'last_update': real_enav_time.strftime('%Y-%m-%d %H:%M'), 'enav': real_enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': nav[0], 'last_nav': nav_value, 'last_nav_rate': nav[2], 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
         except:
             _LOGGER.error('Invalid enav_value: %s, or nav_value: %s', enav[1], nav[1])
             return None
