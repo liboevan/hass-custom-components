@@ -109,6 +109,7 @@ class EastmoneySensor(Entity):
         attrs['est growth rate'] = data['enav_rate']
         attrs['last trading day'] = data['last_trading_day']
         attrs['last nav'] = data['last_nav']
+        attrs['last growth'] = data['last_nav_growth']
         attrs['last growth rate'] = data['last_nav_rate']
         attrs['recent 1 month'] = data['rct_1month']
         attrs['recent 3 months'] = data['rct_3month']
@@ -202,7 +203,12 @@ class EastmoneyData(object):
                     real_enav_value = nav_value
             enav_growth = round(real_enav_value - nav_value, 4)
             enav_rate = str(round(enav_growth * 100 / nav_value, 2)) + '%'
-            return {'last_update': real_enav_time.strftime('%Y-%m-%d %H:%M'), 'enav': real_enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': nav[0], 'last_nav': nav_value, 'last_nav_rate': nav[2], 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
+
+            last_nav_rate = nav[2]
+            last_nav_rate_value = float(last_nav_rate[0:-1])
+            last_nav_growth = round(nav_value - nav_value * 100 / (last_nav_rate_value + 100), 4)
+
+            return {'last_update': real_enav_time.strftime('%Y-%m-%d %H:%M'), 'enav': real_enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': nav[0], 'last_nav': nav_value, 'last_nav_growth': last_nav_growth, 'last_nav_rate': last_nav_rate, 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
         except:
             _LOGGER.error('Invalid enav_value: %s, or nav_value: %s', enav[1], nav[1])
             return None
