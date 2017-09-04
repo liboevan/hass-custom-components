@@ -1,6 +1,6 @@
 # Home Assistant Custom Components
 
-This is a repository of home assistant custom components I complete, including sensor, notify, etc.
+This is a repository of home assistant custom components I complete/improve, including sensor, notify, etc.
 
 Following are plug-in list, please see more information in `doc` folder.
 
@@ -29,7 +29,7 @@ Following are plug-in list, please see more information in `doc` folder.
 
 # Home Assistant Custom Components
 
-这是我的HASS插件仓库，用来存储自己写的一些插件，包括传感器，通知等等。
+这是我的HASS插件仓库，用来存储自己写的或改进的一些插件，包括传感器，通知等等。
 
 以下是插件列表，各插件详情和使用方法请参考`doc`文件夹下的文档。
 

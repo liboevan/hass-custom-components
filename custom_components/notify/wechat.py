@@ -7,7 +7,7 @@
     Need python module requests and wxpy.
 
 # Purpose:
-    Wechat notify powered by wxpy
+    Wechat notification powered by Wxpy and Wechat.
 
 # Author:
     Retroposter retroposter@outlook.com

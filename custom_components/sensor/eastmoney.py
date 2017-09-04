@@ -7,7 +7,7 @@
     Need python module requests and bs4
 
 # Purpose:
-    Fund sensor powered by Eastmoney
+    Fund sensor powered by East Money
 
 # Author:
     Retroposter retroposter@outlook.com
