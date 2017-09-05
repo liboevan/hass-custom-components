@@ -191,15 +191,19 @@ class EastmoneyData(object):
         if enav is None or nav is None:
             return None
         now = datetime.now()
-        enav_time_str = '20' + enav[0]     
+        enav_time_str = '20' + enav[0]
+        last_trading_day_str = nav[0]
         try:
             real_enav_time = enav_time = datetime.strptime(enav_time_str, "%Y-%m-%d %H:%M")
+            last_trading_day = datetime.strptime(last_trading_day_str, "%Y-%m-%d")
             enav_limit_time = enav_time.replace(hour=15, minute=0)
-            real_enav_value = enav_value = float(enav[1])
-            nav_value = float(nav[1])       
+            real_enav_value = float(enav[1])
+            nav_value = float(nav[1])
+            # For timespan greater than 15:00.
             if now > enav_limit_time:
                 real_enav_time = now
-                if real_enav_time.day != enav_time.day:
+                # The est time/last trading day of funds are chaotic between 15:00 and 09:00.
+                if last_trading_day.day == enav_time.day or real_enav_time.day != enav_time.day:
                     real_enav_value = nav_value
             enav_growth = round(real_enav_value - nav_value, 4)
             enav_rate = str(round(enav_growth * 100 / nav_value, 2)) + '%'
@@ -208,7 +212,7 @@ class EastmoneyData(object):
             last_nav_rate_value = float(last_nav_rate[0:-1])
             last_nav_growth = round(nav_value - nav_value * 100 / (last_nav_rate_value + 100), 4)
 
-            return {'last_update': real_enav_time.strftime('%Y-%m-%d %H:%M'), 'enav': real_enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': nav[0], 'last_nav': nav_value, 'last_nav_growth': last_nav_growth, 'last_nav_rate': last_nav_rate, 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
+            return {'last_update': real_enav_time.strftime('%Y-%m-%d %H:%M'), 'enav': real_enav_value, 'enav_growth': enav_growth, 'enav_rate': enav_rate, 'last_trading_day': last_trading_day_str, 'last_nav': nav_value, 'last_nav_growth': last_nav_growth, 'last_nav_rate': last_nav_rate, 'rct_1month': enav[2], 'rct_3month': nav[3], 'rct_1year': enav[3]}
         except:
             _LOGGER.error('Invalid enav_value: %s, or nav_value: %s', enav[1], nav[1])
             return None
