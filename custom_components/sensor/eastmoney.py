@@ -11,9 +11,12 @@
 
 # Author:
     Retroposter retroposter@outlook.com
-    
+
 # Created:
     Aug.31th 2017
+
+# Last Modified:
+    Sep.8th 2017
 '''
 
 import logging
@@ -58,6 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     fund_data.update()
     # If connection failed don't setup platform.
     if fund_data.data is None:
+        _LOGGER.error('fund_data.data is None, will generate sensor.')
         return False
 
     sensors = [EastmoneySensor(fund_data, name)]
@@ -239,6 +243,7 @@ class EastmoneyData(object):
         if rct_1year is not None:
             rct_1year = rct_1year.text
         if nav is None or nav_time is None:
+            _LOGGER.error('enav or enav_time is None.')
             return None          
         return (nav_time, nav, rct_1month, rct_1year)
 
@@ -248,12 +253,17 @@ class EastmoneyData(object):
         if dds is None or len(dds) != 3:
             _LOGGER.error('Element \'dd\' error.')
             return None
+        # Terrible code here. Is it possible to find the element without the color class?
         nav = dds[0].find('span', class_='ui-font-large ui-color-green ui-num')
         if nav is None:
             nav = dds[0].find('span', class_='ui-font-large ui-color-red ui-num')
+        if nav is None:
+            nav = dds[0].find('span', class_='ui-font-large ui-num')
         nav_rate = dds[0].find('span', class_='ui-font-middle ui-color-green ui-num')
         if nav_rate is None:
             nav_rate = dds[0].find('span', class_='ui-font-middle ui-color-red ui-num')
+        if nav_rate is None:
+            nav_rate = dds[0].find('span', class_='ui-font-middle ui-num')
         rct_3month = dds[1].find('span', class_='ui-font-middle ui-color-green ui-num')
         if rct_3month is None:
             rct_3month = dds[1].find('span', class_='ui-font-middle ui-color-red ui-num')
@@ -271,6 +281,7 @@ class EastmoneyData(object):
         if rct_3year is not None:
             rct_3year = rct_3year.text
         if nav is None or date is None:
+            _LOGGER.error('nav or date is None.')
             return None     
         return (date, nav, nav_rate, rct_3month, rct_3year)
 
