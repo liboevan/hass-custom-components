@@ -14,6 +14,9 @@
     
 # Created:
     Sep.8th 2017
+
+# Last Modified:
+    Sep.13th 2017
 '''
 
 from datetime import datetime, timedelta
@@ -97,11 +100,11 @@ class JdFundIndexSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
+        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         data = self.index_data.data
         if data is None:
-            attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
             return attrs
-        attrs[ATTR_ATTRIBUTION] = '{0} {1}'.format(data['index_date'], ATTRIBUTION)
+        attrs['交易日'] = data['index_date']
         attrs['整体走势'] = data['summary']
         if data['hot_list'] is not None:
             for hot in data['hot_list']:
@@ -138,7 +141,7 @@ class JdFundIndexData(object):
         json_data = json.loads(resp.text)
         self.data = {}     
         self.data['index'] = json_data['heat']
-        self.data['index_date'] = json_data['degreeDateStr'][0:-3]
+        self.data['index_date'] = json_data['degreeDateStr'][0:10]
         self.data['summary'] = json_data['shareAdvise']
 
         resp = None
