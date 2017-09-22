@@ -10,9 +10,14 @@
     Baidu tts powered by Baidu.
 
 # Author:
-    Retroposter retroposter@outlook.com copied from Charley's baidu.py (cannot stand his coding style, seriously)
+    Retroposter retroposter@outlook.com
+    Copied from https://github.com/charleyzhu/HomeAssistant_Components/blob/master/tts/baidu.py
+    Cannot stand his coding style, seriously.
 
 # Created:
+    Sep.4th 2017
+
+# Last Modified:
     Sep.4th 2017
 '''
 

@@ -12,10 +12,11 @@
 
 # Author:
     Retroposter retroposter@outlook.com
+    Based https://github.com/naiquann/WBMonitor/blob/master/weiboMonitor.py
 
 # Created:
     Sep.22th 2017
-    
+
 # Last Modified:
     Sep.22th 2017
 '''
