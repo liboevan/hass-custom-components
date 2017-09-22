@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     fund_data.update()
     # If connection failed don't setup platform.
     if fund_data.data is None:
-        _LOGGER.error('fund_data.data is None, will generate sensor.')
+        _LOGGER.error('fund_data.data is None, will not generate sensor.')
         return False
 
     sensors = [EastmoneySensor(fund_data, name)]
