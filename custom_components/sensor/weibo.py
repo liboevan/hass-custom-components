@@ -23,6 +23,7 @@
 
 import logging
 from datetime import timedelta
+import re
 import requests
 import voluptuous as vol
 
@@ -37,6 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Weibo'
 ATTRIBUTION = 'Powered by Sina Weibo'
+
+PAT_EMOTION_PREFIX = re.compile(r'<span.*?alt="')
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_NAME = 'name'
@@ -153,4 +156,8 @@ class WeiboData(object):
         mblog = latest_card['mblog']
         self.data['created_at'] = mblog['created_at']
         self.data['source'] = mblog['source']
-        self.data['text'] = mblog['text']
+        text = mblog['text']
+        span_list = re.findall(PAT_EMOTION_PREFIX , text)
+        for item in span_list:
+            text = text.replace(item, '').replace('"></span>', '')
+        self.data['text'] = text
