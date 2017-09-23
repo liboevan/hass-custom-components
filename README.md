@@ -18,7 +18,15 @@ Following are plug-in list, see more information in `doc` folder please.
   
 * `eastmoney`
   
-  * Information from East Money.
+  * Real-time fund estimate nav from East Money.
+
+* `jdfundindex`
+  
+  * Fund market hot index from JD.
+
+* `weibo`
+  
+  * Latest weibo of specified people.
 
 ## Notify:
 
@@ -56,7 +64,15 @@ Following are plug-in list, see more information in `doc` folder please.
 
 * `eastmoney`
 
-  * 信息来自天天基金。
+  * 实时基金估值，数据来自天天基金。
+
+* `jdfundindex`
+  
+  * 基金市场热度指数，数据来自京东金融。
+
+* `weibo`
+  
+  * 指定用户最新一条的微博。
 
 ## Notify:
 
@@ -72,4 +88,4 @@ Following are plug-in list, see more information in `doc` folder please.
 
 * `baidu` （基于Charley的插件）
 
-  * 服务由百度语音提供。
+  * 服务由百度语音提供。
