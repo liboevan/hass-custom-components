@@ -40,6 +40,7 @@ DEFAULT_NAME = 'Weibo'
 ATTRIBUTION = 'Powered by Sina Weibo'
 
 PAT_EMOTION_PREFIX = re.compile(r'<span.*?alt="')
+PAT_TAG_PREFIX = re.compile(r"<a class='k'.*?from=feed'>")
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_NAME = 'name'
@@ -157,7 +158,11 @@ class WeiboData(object):
         self.data['created_at'] = mblog['created_at']
         self.data['source'] = mblog['source']
         text = mblog['text']
-        span_list = re.findall(PAT_EMOTION_PREFIX , text)
+        span_list = re.findall(PAT_EMOTION_PREFIX, text)
         for item in span_list:
             text = text.replace(item, '').replace('"></span>', '')
+        a_list = re.findall(PAT_TAG_PREFIX, text)
+        for item in a_list:
+            text = text.replace(item, '').replace('</a>', '')
+        text = text.replace('<br/>', '')
         self.data['text'] = text
