@@ -18,7 +18,7 @@
     Sep.22th 2017
 
 # Last Modified:
-    Sep.22th 2017
+    Sep.24th 2017
 '''
 
 import logging
@@ -44,11 +44,13 @@ PAT_TAG_PREFIX = re.compile(r"<a class='k'.*?from=feed'>")
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_NAME = 'name'
+CONF_ICON = 'icon'
 CONF_TARGET_USER_ID = 'target_user_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TARGET_USER_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_ICON, default='mdi:emoticon'): cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(minutes=5)): (vol.All(cv.time_period, cv.positive_timedelta)),
 })
 
@@ -56,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Weibo sensor.""" 
     target_user_id = config[CONF_TARGET_USER_ID]
     name = config[CONF_NAME]
+    icon = config[CONF_ICON]
     interval = config.get(CONF_UPDATE_INTERVAL)
     weibo_data = WeiboData(target_user_id, interval)
     weibo_data.update()
@@ -64,15 +67,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('weibo_data.data is None, will not generate sensor.')
         return False
 
-    sensors = [WeiboSensor(weibo_data, name)]
+    sensors = [WeiboSensor(weibo_data, name, icon)]
     add_devices(sensors, True)
 
 
 class WeiboSensor(Entity):
-    def __init__(self, weibo_data, name):
+    def __init__(self, weibo_data, name, icon):
         """Initialize the sensor."""
         self.weibo_data = weibo_data
         self.client_name = name
+        self._icon = icon
         self._state = None
 
     @property
@@ -88,7 +92,7 @@ class WeiboSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return 'mdi:emoticon'
+        return self._icon
 
     @property
     def device_state_attributes(self):
@@ -157,6 +161,10 @@ class WeiboData(object):
         mblog = latest_card['mblog']
         self.data['created_at'] = mblog['created_at']
         self.data['source'] = mblog['source']
+        if 'raw_text' in mblog:
+            raw_text = mblog['raw_text']
+            self.data['text'] = raw_text
+            return
         text = mblog['text']
         span_list = re.findall(PAT_EMOTION_PREFIX, text)
         for item in span_list:
