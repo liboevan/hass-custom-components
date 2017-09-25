@@ -13,7 +13,9 @@ sensor:
     api_key: YOUR_API_KEY
     city: CN101180101
     update_interval: '00:05:00'
-    forecast: 1,2
+    forecast:
+      - 1
+      - 2
     lang: en
     monitored_conditions:
       - aqi
