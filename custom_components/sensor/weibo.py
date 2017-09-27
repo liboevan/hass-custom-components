@@ -18,7 +18,7 @@
     Sep.22th 2017
 
 # Last Modified:
-    Sep.24th 2017
+    Sep.27th 2017
 '''
 
 import logging
@@ -41,6 +41,7 @@ ATTRIBUTION = 'Powered by Sina Weibo'
 
 PAT_EMOTION_PREFIX = re.compile(r'<span.*?alt="')
 PAT_TAG_PREFIX = re.compile(r"<a class='k'.*?from=feed'>")
+PAT_AT_PREFIX = re.compile(r'<a href.*?>')
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_NAME = 'name'
@@ -170,6 +171,9 @@ class WeiboData(object):
         for item in span_list:
             text = text.replace(item, '').replace('"></span>', '')
         a_list = re.findall(PAT_TAG_PREFIX, text)
+        for item in a_list:
+            text = text.replace(item, '').replace('</a>', '')
+        a_list = re.findall(PAT_AT_PREFIX, text)
         for item in a_list:
             text = text.replace(item, '').replace('</a>', '')
         text = text.replace('<br/>', '')
