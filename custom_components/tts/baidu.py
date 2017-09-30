@@ -10,9 +10,9 @@
     Baidu tts powered by Baidu.
 
 # Author:
-    Retroposter retroposter@outlook.com
-    Copied from https://github.com/charleyzhu/HomeAssistant_Components/blob/master/tts/baidu.py
-    Cannot stand his coding style, seriously.
+    Charleyzhu, Retroposter retroposter@outlook.com
+    Retroposter copied from https://github.com/charleyzhu/HomeAssistant_Components/blob/master/tts/baidu.py
+    Cannot stand charley's coding style, seriously.
 
 # Created:
     Sep.4th 2017
@@ -66,7 +66,6 @@ def get_engine(hass, config):
     return BaiduTTS(apiKey, secretKey, lang, speed, pitch ,volume, person)
 
 class BaiduTTS (Provider):
-
     def __init__(self, apiKey, secretKey, lang, speed, pitch, volume, person):
         self._apiKey = apiKey
         self._secretKey = secretKey
