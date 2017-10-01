@@ -14,10 +14,10 @@
     Retroposter retroposter@outlook.com
 
 # Created:
-    Oct.1th 2017
+    Oct.1st 2017
 
 # Last Modified:
-    Oct.1th 2017
+    Oct.1st 2017
 '''
 
 from datetime import datetime, timedelta
@@ -46,7 +46,7 @@ PAT_MOVIE_NAME = re.compile(r'.+《(.+)》.+')
 CONF_UPDATE_INTERVAL = 'update_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(hours=1)): (vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(minutes=15)): (vol.All(cv.time_period, cv.positive_timedelta)),
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -120,7 +120,7 @@ class Dytt8Data(object):
         movie_url = home_url + first_movive['href']
         movie_download_url = self._get_download_link(movie_url)
         attributes = {}
-        attributes['url'] = movie_url
+        attributes['detail link'] = movie_url
         attributes['download link'] = movie_download_url
         self.data = movie_name, attributes
 
