@@ -87,20 +87,13 @@ class Dytt8Sensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-        data = self.movie_data.data
+        attrs = self.movie_data.data[1]
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
-        for key in data:
-            attrs[key] = data[key]
         return attrs
 
     def update(self):
         self.movie_data.update()
-        data = self.movie_data.data
-        state = ''
-        for key in data.keys():
-            state = state + key + ' | '
-        self._state = state.strip(' | ')
+        self._state = self.movie_data.data[0]
 
 
 class Dytt8Data(object):
@@ -110,9 +103,9 @@ class Dytt8Data(object):
         self.update = Throttle(internal)(self._update)
 
     def _update(self):
-        HOME_URL = 'http://www.dytt8.net'
+        home_url = 'http://www.dytt8.net'
         # Find latest movies
-        new_movies_url = HOME_URL + '/html/gndy/dyzz/index.html'
+        new_movies_url = home_url + '/html/gndy/dyzz/index.html'
         rep = requests.get(new_movies_url)
         rep.encoding = 'gb2312'
         soup = BeautifulSoup(rep.text, 'html.parser')
@@ -122,23 +115,14 @@ class Dytt8Data(object):
         if movie_count == 0:
             _LOGGER.error('No any movies in the page.')
             return
-        first_movive = movie_list[0]
-        last_day = re.findall(PAT_DATE, first_movive.find('font').text)[0]
-        movie_dict = {}
-        for movie in movie_list:
-            date_str = re.findall(PAT_DATE, movie.find('font').text)[0]
-            if date_str != last_day:
-                break
-            movie = movie.find('a')
-            movie_url = HOME_URL + movie['href']
-            movie_name = re.findall(PAT_MOVIE_NAME, movie.text)[0]
-            movie_dict[movie_name] = movie_url
-        # Find download urls
-        for key in movie_dict:
-            url = movie_dict[key]
-            download_link = self._get_download_link(url)
-            movie_dict[key] = download_link
-        self.data = movie_dict
+        first_movive = movie_list[0].find('a')
+        movie_name = re.findall(PAT_MOVIE_NAME, first_movive.text)[0]
+        movie_url = home_url + first_movive['href']
+        movie_download_url = self._get_download_link(movie_url)
+        attributes = {}
+        attributes['url'] = movie_url
+        attributes['download_link'] = movie_download_url
+        self.data = movie_name, attributes
 
     def _get_download_link(self, movie_url):
         try:
