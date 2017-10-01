@@ -121,7 +121,7 @@ class Dytt8Data(object):
         movie_download_url = self._get_download_link(movie_url)
         attributes = {}
         attributes['url'] = movie_url
-        attributes['download_link'] = movie_download_url
+        attributes['download link'] = movie_download_url
         self.data = movie_name, attributes
 
     def _get_download_link(self, movie_url):
