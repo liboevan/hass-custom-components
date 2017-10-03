@@ -110,7 +110,13 @@ class Dytt8Data(object):
         rep.encoding = 'gb2312'
         soup = BeautifulSoup(rep.text, 'html.parser')
         content = soup.find('div', class_='co_content8')
+        if content is None:
+            _LOGGER.error('No div.co_content8 in the page.')
+            return
         movie_list = content.find_all('table')
+        if movie_list is None:
+            _LOGGER.error('No table in div.co_content8')
+            return
         movie_count = len(movie_list)
         if movie_count == 0:
             _LOGGER.error('No any movies in the page.')
