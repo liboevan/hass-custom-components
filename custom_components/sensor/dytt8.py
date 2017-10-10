@@ -17,7 +17,7 @@
     Oct.1st 2017
 
 # Last Modified:
-    Oct.5TH 2017
+    Oct.10TH 2017
 '''
 
 from datetime import datetime, timedelta
@@ -40,8 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Dytt8'
 ATTRIBUTION = 'Powered by Dytt8'
 
-PAT_DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
+#PAT_DATE = re.compile(r'\d{4}-\d{2}-\d{2}')
 PAT_MOVIE_NAME = re.compile(r'.+《(.+)》.+')
+DECOLLATOR = ' | '
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 
@@ -112,27 +113,21 @@ class Dytt8Data(object):
         if new_movie_table is None:
             _LOGGER.error('No any tables in the page.')
             return
-        first_movie = new_movie_table.find('td')
-        if first_movie is None:
+        new_movies = new_movie_table.find_all('tr')
+        tr_count = len(new_movies)
+        if tr_count <= 0:
             _LOGGER.error('No any tds in the first table.')
             return
-        movie = first_movie.find_all('a')[1]
-        movie_name = re.findall(PAT_MOVIE_NAME, movie.text)[0]
-        movie_url = home_url + movie['href']
-        movie_download_url = self._get_download_link(movie_url)
+        first_movie = new_movies[0]
+        last_date = first_movie.find('font').text
+        state = ''
         attributes = {}
-        attributes['detail link'] = movie_url
-        attributes['download link'] = movie_download_url
-        self.data = movie_name, attributes
-
-    def _get_download_link(self, movie_url):
-        try:
-            rep = requests.get(movie_url)
-            rep.encoding = 'gb2312'
-            soup = BeautifulSoup(rep.text, 'html.parser')
-            movie_zone = soup.find('div', id='Zoom')
-            download_link = movie_zone.find('a')['href']
-            return download_link
-        except:
-            _LOGGER.error('Failed to get download url in %s', movie_url)
-            return None
+        for new_movie in new_movies:
+            if new_movie.find('font').text == last_date:
+                movie = new_movie.find('td').find_all('a')[1]
+                movie_name = re.findall(PAT_MOVIE_NAME, movie.text)[0]
+                movie_url = home_url + movie['href']
+                state = state + movie_name + DECOLLATOR
+                attributes[movie_name] = movie_url
+        state = state.strip(DECOLLATOR)
+        self.data = state, attributes
