@@ -17,7 +17,7 @@
     Oct.1st 2017
 
 # Last Modified:
-    Oct.1st 2017
+    Oct.5TH 2017
 '''
 
 from datetime import datetime, timedelta
@@ -104,26 +104,21 @@ class Dytt8Data(object):
 
     def _update(self):
         home_url = 'http://www.dytt8.net'
-        # Find latest movies
-        new_movies_url = home_url + '/html/gndy/dyzz/index.html'
-        rep = requests.get(new_movies_url)
+        rep = requests.get(home_url)
         rep.encoding = 'gb2312'
         soup = BeautifulSoup(rep.text, 'html.parser')
         content = soup.find('div', class_='co_content8')
-        if content is None:
-            _LOGGER.error('No div.co_content8 in the page.')
+        new_movie_table = content.find('table')
+        if new_movie_table is None:
+            _LOGGER.error('No any tables in the page.')
             return
-        movie_list = content.find_all('table')
-        if movie_list is None:
-            _LOGGER.error('No table in div.co_content8')
+        first_movie = new_movie_table.find('td')
+        if first_movie is None:
+            _LOGGER.error('No any tds in the first table.')
             return
-        movie_count = len(movie_list)
-        if movie_count == 0:
-            _LOGGER.error('No any movies in the page.')
-            return
-        first_movive = movie_list[0].find('a')
-        movie_name = re.findall(PAT_MOVIE_NAME, first_movive.text)[0]
-        movie_url = home_url + first_movive['href']
+        movie = first_movie.find_all('a')[1]
+        movie_name = re.findall(PAT_MOVIE_NAME, movie.text)[0]
+        movie_url = home_url + movie['href']
         movie_download_url = self._get_download_link(movie_url)
         attributes = {}
         attributes['detail link'] = movie_url
