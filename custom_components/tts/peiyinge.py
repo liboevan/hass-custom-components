@@ -17,7 +17,7 @@
     Sep.30th 2017
 
 # Last Modified:
-    Sep.30th 2017
+    Oct.12th 2017
 '''
 
 import logging
@@ -59,7 +59,7 @@ def get_engine(hass, config):
     lang = config.get(CONF_LANG)
     speed = config.get(CONF_SPEED)
     volume = config.get(CONF_VOLUME)
-    return PeiyingeTTS(person_id, lang, speed, volume)
+    return PeiyingeTTS(lang, person_id, speed, volume)
 
 
 class PeiyingeTTS (Provider):
