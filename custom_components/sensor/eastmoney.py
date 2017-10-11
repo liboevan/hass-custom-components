@@ -16,7 +16,7 @@
     Aug.31th 2017
 
 # Last Modified:
-    Sep.8th 2017
+    Oct.11th 2017
 '''
 
 import logging
@@ -30,7 +30,7 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_LATITUDE, CONF_LONGITUDE, CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS, ATTR_ATTRIBUTION)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -44,18 +44,21 @@ PAT_DATE = re.compile(r'\d{4}-\d{1,2}-\d{1,2}')
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_NAME = 'name'
+CONF_FRIENDLY_NAME = 'friendly_name'
 CONF_FUND_ID = 'fund_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FUND_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(minutes=15)): (vol.All(cv.time_period, cv.positive_timedelta)),
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fund sensor.""" 
-    fund_id = config[CONF_FUND_ID]
-    name = config[CONF_NAME]
+    fund_id = config.get(CONF_FUND_ID)
+    name = config.get(CONF_NAME)
+    friendly_name = config.get(CONF_FRIENDLY_NAME, name)
     interval = config.get(CONF_UPDATE_INTERVAL)
     fund_data = EastmoneyData(fund_id, interval)
     fund_data.update()
@@ -64,21 +67,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('fund_data.data is None, will not generate sensor.')
         return False
 
-    sensors = [EastmoneySensor(fund_data, name)]
+    sensors = [EastmoneySensor(hass, fund_data, name, friendly_name)]
     add_devices(sensors, True)
 
+
 class EastmoneySensor(Entity):
-    def __init__(self, fund_data, name):
+    def __init__(self, hass, fund_data, name, friendly_name):
         """Initialize the sensor."""
         self.fund_data = fund_data
-        self.client_name = name
+        self.entity_id = generate_entity_id('sensor.{}', name, hass=hass)
+        self.display_name = friendly_name
         self._state = None
         self._trend = -1
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.client_name
+        return self.display_name
 
     @property
     def state(self):
