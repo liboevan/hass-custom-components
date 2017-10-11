@@ -16,7 +16,7 @@
     Aug.24th 2017
 
 # Last Modified:
-    Aug.31th 2017
+    Oct.11th 2017
 '''
 
 import logging
@@ -181,7 +181,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # If connection failed don't setup platform.
     if forecast_data.data is None:
         return False
-
+    
     name = config[CONF_NAME]
     sensors = []
     for variable in monitored_conditions:
@@ -191,6 +191,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(HeWeatherSensor(forecast_data, variable, name, forecast_day))
 
     add_devices(sensors, True)
+
 
 class HeWeatherSensor(Entity):
     def __init__(self, forecast_data, sensor_type, name, forecast_day=0):
@@ -258,8 +259,7 @@ class HeWeatherSensor(Entity):
                         data = now_data['wind'][key]
                     else:
                         data = now_data[key]
-                    attrs[value] = data        
-        
+                    attrs[value] = data     
         return attrs
 
     def update(self):
@@ -307,8 +307,9 @@ class HeWeatherSensor(Entity):
                     self._state = summary_data['txt_n'].title()
                     self._icon = summary_data['code_n']
 
+
 class HeWeatherData(object):
-    """Get the latest data from Darksky."""
+    """Get the latest data from Heweather."""
 
     def __init__(self, api_key, latitude, longitude, city, interval, is_forecast_aqi, is_forecast_now, forecast_days, lang):
         """Initialize the data object."""
@@ -352,7 +353,7 @@ class HeWeatherData(object):
 
         self.data = {}
         self.data['last_update'] = wea_json['basic']['update']['loc']
-        if self.is_forecast_aqi:
+        if self.is_forecast_aqi and 'aqi' in wea_json:
             self.data['aqi'] = wea_json['aqi']['city']
         if self.is_forecast_now:
             self.data['now'] = wea_json['now']
