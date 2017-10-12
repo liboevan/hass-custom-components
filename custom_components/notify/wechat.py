@@ -4,10 +4,10 @@
 
 # Prerequisite:
     Based on Python 3.4
-    Need python module requests and wxpy.
+    Need python module requests, pillow and wxpy.
 
 # Purpose:
-    Wechat notification powered by Wxpy and Wechat.
+    Wechat notifier powered by Wxpy and Wechat.
 
 # Author:
     Retroposter retroposter@outlook.com
@@ -24,7 +24,6 @@ REQUIREMENTS = ['wxpy==0.3.9.8','pillow']
 import logging
 import os
 import voluptuous as vol
-import xml.etree.ElementTree as ET
 
 from wxpy import *
 import requests
@@ -54,7 +53,6 @@ class WeChatService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA)
-
         # Send to file helper if no target specified.
         if targets is None:
             if data is not None:
