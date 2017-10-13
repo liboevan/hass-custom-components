@@ -16,17 +16,17 @@
     Oct.12th 2017
 
 # Last Modified:
-    Oct.12th 2017
+    Oct.13th 2017
 '''
 
 REQUIREMENTS = ['wxpy==0.3.9.8','pillow']
 
 import logging
 import os
-import voluptuous as vol
 
 from wxpy import *
 import requests
+import voluptuous as vol
 
 from homeassistant.components.notify import (BaseNotificationService, ATTR_TARGET, ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
@@ -65,12 +65,14 @@ def get_service(hass, config, discovery_info=None):
         commander = ensure_one(bot.friends().search(commander))
 
     def handle_cmd(msg_text):
-        if cmd_handler is not None:
+        if cmd_handler is None:
+            return
+        try:
             items = cmd_handler.split('.')
-        hass.services.call(items[0], items[1], {
-            'message': msg_text
-        })
-        hass.block_till_done()
+            hass.services.call(items[0], items[1], {'message': msg_text})
+            hass.block_till_done()
+        except:
+            _LOGGER.error('Handle cmd error: %s', msg_text)
 
     def is_cmd_fmt(msg_text):
         if cmd_prefix is None:
@@ -81,12 +83,15 @@ def get_service(hass, config, discovery_info=None):
 
     @bot.register(Friend)
     def on_msg_received(msg):
-        # if it was sent by specified user
+        # If it was sent by specified user
         if commander is not None and msg.sender == commander:
             msg_text = msg.text
-            # if it matches specified fmt
+            # If it matches specified fmt
             if is_cmd_fmt(msg_text):
-                handle_cmd(msg.text)
+                if cmd_handler is None:
+                    msg.chat.send_msg('No command handler specified.')
+                else:
+                    handle_cmd(msg.text)
                 return
         if tuling_api_key is not None:
             tuling = Tuling(api_key=tuling_api_key)
