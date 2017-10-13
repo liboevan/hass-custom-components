@@ -109,6 +109,9 @@ class Dytt8Data(object):
         rep.encoding = 'gb2312'
         soup = BeautifulSoup(rep.text, 'html.parser')
         content = soup.find('div', class_='co_content8')
+        if content is None:
+            _LOGGER.error('No div of co_content8 in the page.')
+            return
         new_movie_table = content.find('table')
         if new_movie_table is None:
             _LOGGER.error('No any tables in the page.')
@@ -119,7 +122,11 @@ class Dytt8Data(object):
             _LOGGER.error('No any tds in the first table.')
             return
         first_movie = new_movies[0]
-        last_date = first_movie.find('font').text
+        last_date = first_movie.find('font')
+        if last_date is None:
+            _LOGGER.error('No font in the movie tr.')
+            return
+        last_date = last_date.text
         state = ''
         attributes = {}
         for new_movie in new_movies:
