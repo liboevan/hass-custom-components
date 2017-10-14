@@ -16,7 +16,7 @@
     Oct.12th 2017
 
 # Last Modified:
-    Oct.13th 2017
+    Oct.14th 2017
 '''
 
 REQUIREMENTS = ['wxpy==0.3.9.8','pillow']
@@ -29,6 +29,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (BaseNotificationService, ATTR_TARGET, ATTR_DATA, ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA)
+from homeassistant.exceptions import (HomeAssistantError, TemplateError)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,18 +38,23 @@ ATTR_IMAGE = 'image'
 ATTR_VIDEO = 'video'
 ATTR_FILE = 'file'
 
+# For sending msg
 GROUP_POSTFIX = '#group#'
 
 CONF_TULING_API_KEY = 'tuling_api_key'
 CONF_COMMANDER = 'commander'
 CONF_CMD_HANDLER = 'cmd_handler'
 CONF_CMD_PREFIX = 'cmd_prefix'
+CONF_TTS_HANDLER = 'tts_handler'
+CONF_TTS_PREFIX = 'tts_prefix'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TULING_API_KEY): cv.string,
     vol.Optional(CONF_COMMANDER): cv.string,
-    vol.Optional(CONF_CMD_HANDLER): cv.entity_id,
-    vol.Optional(CONF_CMD_PREFIX): cv.string,
+    vol.Inclusive(CONF_CMD_HANDLER, 'cmd sys', 'Cmd handler and cmd prefix must exist together'): cv.entity_id,
+    vol.Inclusive(CONF_CMD_PREFIX, 'cmd sys', 'Cmd handler and cmd prefix must exist together'): cv.string,
+    vol.Inclusive(CONF_CMD_HANDLER, 'tts sys', 'Tts handler and tts prefix must exist together'): cv.entity_id,
+    vol.Inclusive(CONF_CMD_PREFIX, 'tts sys', 'Tts handler and tts prefix must exist together'): cv.string,
 })
 
 def get_service(hass, config, discovery_info=None):
@@ -57,6 +63,8 @@ def get_service(hass, config, discovery_info=None):
     commander = config.get(CONF_COMMANDER, None)
     cmd_handler = config.get(CONF_CMD_HANDLER, None)
     cmd_prefix = config.get(CONF_CMD_PREFIX, None)
+    tts_handler = config.get(CONF_TTS_HANDLER, None)
+    tts_prefix = config.get(CONF_TTS_PREFIX, None)
 
     cache_path = os.path.join(hass.config.path('deps'), 'wxpy.pkl')
     bot = Bot(cache_path=cache_path, console_qr=True)
@@ -64,35 +72,69 @@ def get_service(hass, config, discovery_info=None):
     if commander is not None:
         commander = ensure_one(bot.friends().search(commander))
 
-    def handle_cmd(msg_text):
+    def invoke_service(hdomain, hservice, data):
+        try:
+            hass.services.call(hdomain, hservice, data)
+            hass.block_till_done()
+        except HomeAssistantError as err:
+            _LOGGER.error('Invoke service: %s.%s hass error', hdomain, hservice)
+            _LOGGER.exception(err)
+            raise err
+        except TemplateError as err:
+            _LOGGER.error('Invoke service: %s.%s template error', hdomain, hservice)
+            _LOGGER.exception(err)
+            raise err
+
+    def handle_cmd(wechat_msg):
         if cmd_handler is None:
             return
         try:
             items = cmd_handler.split('.')
-            hass.services.call(items[0], items[1], {'message': msg_text})
-            hass.block_till_done()
+            invoke_service(items[0], items[1], {'message': wechat_msg.text})
+            wechat_msg.chat.send_msg('Invoke cmd handler success.')
         except:
-            _LOGGER.error('Handle cmd error: %s', msg_text)
+            wechat_msg.chat.send_msg('Failed, try again or contant admin.')
 
-    def is_cmd_fmt(msg_text):
-        if cmd_prefix is None:
+    def handle_tts(wechat_msg):
+        if tts_handler is None:
+            return
+        try:
+            items = tts_handler.split('.')
+            invoke_service(items[0], items[1], {'message': wechat_msg.text})
+            wechat_msg.chat.send_msg('Invoke tts handler success.')
+        except:
+            wechat_msg.chat.send_msg('Failed, try again or contant admin.')
+
+    def is_specified_fmt(fmt_prefix, msg_text):
+        if fmt_prefix is None:
             return False
         text = msg_text.lower()
-        cmd_pf = cmd_prefix.lower()
-        return text.startswith(cmd_pf)
+        fmt_pf = fmt_prefix.lower()
+        return text.startswith(fmt_pf)
+
+    def is_cmd_fmt(msg_text):
+        return is_specified_fmt(cmd_prefix, msg_text)
+
+    def is_tts_fmt(msg_text):
+        return is_specified_fmt(tts_prefix, msg_text)
 
     @bot.register(Friend)
     def on_msg_received(msg):
-        # If it was sent by specified user
+        # If it is sent by specified user, check if it is a cmd
         if commander is not None and msg.sender == commander:
-            msg_text = msg.text
-            # If it matches specified fmt
-            if is_cmd_fmt(msg_text):
-                if cmd_handler is None:
-                    msg.chat.send_msg('No command handler specified.')
+            # If it matches cmd fmt, invoke cmd handler to process
+            if is_cmd_fmt(msg.text):
+                if cmd_handler is not None:
+                    handle_cmd(msg)
                 else:
-                    handle_cmd(msg.text)
+                    msg.chat.send_msg('Unsupport: No command handler specified.')
                 return
+        if is_tts_fmt(msg.text):
+            if tts_handler is not None:
+                handle_tts(msg)
+            else:
+                msg.chat.send_msg('Unsupport: No tts handler specified.')
+            return
         if tuling_api_key is not None:
             tuling = Tuling(api_key=tuling_api_key)
             tuling.do_reply(msg)
