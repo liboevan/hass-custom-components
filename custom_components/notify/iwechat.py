@@ -73,37 +73,28 @@ def get_service(hass, config, discovery_info=None):
         commander = ensure_one(bot.friends().search(commander))
 
     def invoke_service(hdomain, hservice, data):
-        try:
-            hass.services.call(hdomain, hservice, data)
-            hass.block_till_done()
-        except HomeAssistantError as err:
-            _LOGGER.error('Invoke service: %s.%s hass error', hdomain, hservice)
-            _LOGGER.exception(err)
-            raise err
-        except TemplateError as err:
-            _LOGGER.error('Invoke service: %s.%s template error', hdomain, hservice)
-            _LOGGER.exception(err)
-            raise err
+        hass.services.call(hdomain, hservice, data)
+        hass.block_till_done()
 
-    def handle_cmd(wechat_msg):
+    def handle_cmd(cmd_msg, chat):
         if cmd_handler is None:
             return
         try:
             items = cmd_handler.split('.')
-            invoke_service(items[0], items[1], {'message': wechat_msg.text})
-            wechat_msg.chat.send_msg('Invoke cmd handler success.')
+            invoke_service(items[0], items[1], {'message': cmd_msg})
+            chat.send_msg('Invoke cmd handler success.')
         except:
-            wechat_msg.chat.send_msg('Failed, try again or contant admin.')
+            chat.send_msg('Failed, try again or contant admin.')
 
-    def handle_tts(wechat_msg):
+    def handle_tts(tts_msg, sender, sex, chat):
         if tts_handler is None:
             return
         try:
             items = tts_handler.split('.')
-            invoke_service(items[0], items[1], {'message': wechat_msg.text})
-            wechat_msg.chat.send_msg('Invoke tts handler success.')
+            invoke_service(items[0], items[1], {'message': tts_msg, 'sender': sender, 'sex': sex})
+            chat.send_msg('Invoke tts handler success.')
         except:
-            wechat_msg.chat.send_msg('Failed, try again or contant admin.')
+            chat.send_msg('Failed, try again or contant admin.')
 
     def is_specified_fmt(fmt_prefix, msg_text):
         if fmt_prefix is None:
@@ -125,13 +116,13 @@ def get_service(hass, config, discovery_info=None):
             # If it matches cmd fmt, invoke cmd handler to process
             if is_cmd_fmt(msg.text):
                 if cmd_handler is not None:
-                    handle_cmd(msg)
+                    handle_cmd(msg.text, msg.chat)
                 else:
-                    msg.chat.send_msg('Unsupport: No command handler specified.')
+                    msg.chat.send_msg('Unsupport: No cmd handler specified.')
                 return
         if is_tts_fmt(msg.text):
             if tts_handler is not None:
-                handle_tts(msg)
+                handle_tts(msg.text, msg.sender.remark_name, msg.sender.sex, msg.chat)
             else:
                 msg.chat.send_msg('Unsupport: No tts handler specified.')
             return
