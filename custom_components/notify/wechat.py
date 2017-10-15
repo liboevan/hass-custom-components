@@ -70,7 +70,7 @@ class WeChatService(BaseNotificationService):
             self.bot.file_helper.send_msg(message)
         else:
             for tar in targets:
-                if tar == "":
+                if tar == '':
                     _LOGGER.error('Invalid target.')
                     continue
                 # Determine the target is a friend or group.
@@ -79,18 +79,19 @@ class WeChatService(BaseNotificationService):
                     chats = self.bot.friends().search(target[0])
                 else:
                     chats = self.bot.groups().search(target[0])
-                if chats is not None and len(chats) > 0:
+                chats_count = len(chats)
+                if chats is not None and chats_count > 0:
                     # Only send to the first chat matched specified target.
                     chat = chats[0]
                     if data is not None:
                         if ATTR_IMAGE in data:
-                            image = data.get(ATTR_IMAGE,None)
+                            image = data.get(ATTR_IMAGE, None)
                             chat.send_image(image)
                         elif ATTR_VIDEO in data:
-                            video = data.get(ATTR_VIDEO,None)
+                            video = data.get(ATTR_VIDEO, None)
                             chat.send_video(video)
                         elif ATTR_FILE in data:
-                            file = data.get(ATTR_FILE,None)
+                            file = data.get(ATTR_FILE, None)
                             chat.send_file(file)
                         else:
                             _LOGGER.error('No image, video or file in data.')
