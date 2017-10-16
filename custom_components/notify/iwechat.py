@@ -16,7 +16,7 @@
     Oct.12th 2017
 
 # Last Modified:
-    Oct.14th 2017
+    Oct.16th 2017
 '''
 
 REQUIREMENTS = ['wxpy==0.3.9.8','pillow']
@@ -99,7 +99,7 @@ def get_service(hass, config, discovery_info=None):
             _LOGGER.exception(ex)
 
     def is_specified_fmt(fmt_prefix, msg_text):
-        if fmt_prefix is None:
+        if fmt_prefix is None or msg_text is None:
             return False
         text = msg_text.lower()
         fmt_pf = fmt_prefix.lower()
@@ -113,22 +113,23 @@ def get_service(hass, config, discovery_info=None):
 
     @bot.register(Friend)
     def on_msg_received(msg):
-        # If it is sent by specified user, check if it is a cmd
-        if commander is not None and msg.sender == commander:
-            # If it matches cmd fmt, invoke cmd handler to process
-            if is_cmd_fmt(msg.text):
+        if msg.text is not None:
+            # If it is sent by specified user, check if it metches cmd fmt. If it does,
+            # invoke cmd handler to process
+            if commander is not None and msg.sender == commander and is_cmd_fmt(msg.text):
+                # If it matches cmd fmt, invoke cmd handler to process
                 if cmd_handler is not None:
                     handle_cmd(msg.text, msg.chat)
                 else:
                     msg.chat.send_msg('Unsupport: No cmd handler specified.')
                 return
-        # If it matches tts fmt, invoke tts handler to process
-        if is_tts_fmt(msg.text):
-            if tts_handler is not None:
-                handle_tts(msg.text, msg.sender.remark_name, msg.sender.sex, msg.chat)
-            else:
-                msg.chat.send_msg('Unsupport: No tts handler specified.')
-            return
+            # If it matches tts fmt, invoke tts handler to process
+            if is_tts_fmt(msg.text):
+                if tts_handler is not None:
+                    handle_tts(msg.text, msg.sender.remark_name, msg.sender.sex, msg.chat)
+                else:
+                    msg.chat.send_msg('Unsupport: No tts handler specified.')
+                return
         if tuling_api_key is not None:
             tuling = Tuling(api_key=tuling_api_key)
             tuling.do_reply(msg)
