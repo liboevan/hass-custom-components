@@ -16,7 +16,7 @@
     Oct.1st 2017
 
 # Last Modified:
-    Oct.13th 2017
+    Oct.19th 2017
 '''
 
 from datetime import datetime, timedelta
@@ -51,7 +51,7 @@ SENSOR_EN_TV_PLAY = 'en_tv_play'
 
 SENSOR_TYPES = {
     SENSOR_MOVIE: ['Movie', 'mdi:movie'],
-    SENSOR_EN_TV_PLAY: ['TV play', 'mdi:movie'],
+    SENSOR_EN_TV_PLAY: ['TV Play', 'mdi:movie'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -128,22 +128,39 @@ class Dytt8Data(object):
         rep = requests.get(self._home_url)
         rep.encoding = 'gb2312'
         soup = BeautifulSoup(rep.text, 'html.parser')
-        # The first div of co_content8 is new movies
-        new_movies_soup = soup.find('div', class_='co_content8')
-        # The second div of co_content3 is en tv plays
-        tv_list = soup.find_all('div', class_='co_content3')
-        en_tv_plays_soup = None
-        if tv_list is not None:
-            tv_count = len(tv_list)
-            if tv_count > 1:
-                en_tv_plays_soup = tv_list[1]
+        # The first div of co_content8 is new movies, the second is xunlei movies.
+        movie_tab_list = soup.find_all('div', class_='co_content8')
+        if movie_tab_list is not None and len(movie_tab_list) > 1:
+            new_movies_soup = movie_tab_list[0]
+            xunlei_movies_soup = movie_tab_list[1]
         new_movies_data = self._get_data(new_movies_soup)
+        xunlei_movies_data = self._get_data(xunlei_movies_soup)
+        # The second div of co_content3 is en tv plays
+        tv_tab_list = soup.find_all('div', class_='co_content3')
+        if tv_tab_list is not None and len(tv_tab_list) > 1:
+            en_tv_plays_soup = tv_tab_list[1]
         en_tv_plays_data = self._get_data(en_tv_plays_soup)
-        if new_movies_data is None and en_tv_plays_data is None:
+        if new_movies_data is None and xunlei_movies_data is None and en_tv_plays_data is None:
             _LOGGER.error('Both new_movies_data and en_tv_plays_data are none.')
             return
+        if new_movies_data is not None and xunlei_movies_data is not None:
+            date1 = datetime.strptime(new_movies_data[2], "%Y-%m-%d")
+            date2 = datetime.strptime(xunlei_movies_data[2], "%Y-%m-%d")
+            if date1 > date2:
+                movies_data = new_movies_data
+            elif date1 < date2:
+                movies_data = xunlei_movies_data
+            else:
+                movies_attributes = xunlei_movies_data[1]
+                for movie_name in new_movies_data[1]:
+                    movies_attributes[movie_name] = new_movies_data[1][movie_name]
+                movies_state = ''
+                for movie_name in movies_attributes:
+                    movies_state = movies_state + movie_name + DECOLLATOR
+                movies_state = movies_state.strip(DECOLLATOR)
+                movies_data = movies_state, movies_attributes, new_movies_data[2]
         data = {}
-        data[SENSOR_MOVIE] = new_movies_data
+        data[SENSOR_MOVIE] = movies_data
         data[SENSOR_EN_TV_PLAY] = en_tv_plays_data
         self.data = data
 
@@ -172,4 +189,4 @@ class Dytt8Data(object):
                 state = state + r_name + DECOLLATOR
                 attributes[r_name] = r_url
         state = state.strip(DECOLLATOR)
-        return state, attributes
+        return state, attributes, last_date
