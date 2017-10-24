@@ -115,6 +115,7 @@ class Dytt8Sensor(Entity):
             attrs = data[1]
             attrs[ATTR_ATTRIBUTION] = '{0} {1}'.format(data[2], ATTRIBUTION)
         else:
+            attrs = {}
             attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attrs
 
