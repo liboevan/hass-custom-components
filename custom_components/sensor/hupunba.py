@@ -16,7 +16,7 @@
     Oct.24th 2017
 
 # Last Modified:
-    Oct.24th 2017
+    Oct.25th 2017
 '''
 
 from datetime import date, timedelta
@@ -43,12 +43,13 @@ PAT_SCORE = re.compile('\d+')
 DEFAULT_TEAM = 'lakers'
 RESULTS = ['胜', '负']
 
-DATA_MY_SCORE = 'my_score'
-DATA_OPPONENT_SCORE = 'opponent_score'
+DATA_MY_SCORE = 'my score'
+DATA_OPPONENT_SCORE = 'opponent score'
 DATA_OPPONENT = 'opponent'
 DATA_RESULT = 'result'
-DATA_GAME_TIME = 'game_time'
-DATA_IS_MY_HOME = 'is_my_home'
+DATA_GAME_TIME = 'game time'
+DATA_IS_MY_HOME = 'is my home'
+DATA_GAME_ID = 'game id'
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_MY_TEAM = 'my_team'
@@ -114,7 +115,7 @@ class HupuNbaSensor(Entity):
         self.hupunba_data = hupunba_data
         self.my_team = my_team
         self.entity_id = generate_entity_id('sensor.{}', self.my_team, hass=hass)
-        self.display_name = TEAM_MAP[self.my_team]
+        self.display_name = self.my_team.capitalize()
         self._state = None
 
     @property
@@ -141,6 +142,9 @@ class HupuNbaSensor(Entity):
         if data is not None:
             attrs['start at'] = data[DATA_GAME_TIME]
             attrs['result'] = data[DATA_RESULT]
+            if data[DATA_GAME_ID] is not None:
+                attrs['boxscore'] = self.hupunba_data.boxscore_url
+                attrs['recap'] = self.hupunba_data.recap_url
         return attrs
 
     def update(self):
@@ -163,13 +167,30 @@ class HupuNbaData(object):
     def __init__(self, my_team, internal):
         self.my_team = my_team
         self.data = None
-        self._home_url = 'https://nba.hupu.com/schedule/'
+        self._home_url = 'https://nba.hupu.com/'
+        self._sub_schedule_url = 'schedule/'
+        self._sub_boxscore_url = 'games/boxscore/'
+        self._sub_recap_url = 'games/recap/'
         # Apply throttling to methods using configured interval
         self.update = Throttle(internal)(self._update)
 
+    @property
+    def boxscore_url(self):
+        if self.data is None or self.data[DATA_GAME_ID] is None:
+            return None
+        game_id = self.data[DATA_GAME_ID]
+        return self._home_url + self._sub_boxscore_url + game_id
+
+    @property
+    def recap_url(self):
+        if self.data is None or self.data[DATA_GAME_ID] is None:
+            return None
+        game_id = self.data[DATA_GAME_ID]
+        return self._home_url + self._sub_recap_url + game_id
+
     def _update(self):
-        rep = requests.get(self._home_url + self.my_team)
-        soup = BeautifulSoup(rep.text, 'html.parser') #, from_encoding='gb18030'
+        rep = requests.get(self._home_url + self._sub_schedule_url+ self.my_team)
+        soup = BeautifulSoup(rep.text, 'html.parser')
         schedule_soup = soup.find('table', class_='players_table')
         the_day = date.today()
         game_data = self._get_game_of_day(schedule_soup, the_day)
@@ -206,7 +227,7 @@ class HupuNbaData(object):
             scores_list = re.findall(PAT_SCORE, scores.text)
             is_start = len(scores_list) > 1
             if is_start:
-                if is_my_home:             
+                if is_my_home:
                     opponent_score = scores_list[0]
                     my_team_score = scores_list[1]
                 else:
@@ -217,11 +238,17 @@ class HupuNbaData(object):
             result = scores.find_next('td').text.strip()
             if result not in RESULTS:
                 result = 'N/A'
+            next_to_gtime = day_tb.find_next('a')
+            if next_to_gtime.text == '数据统计':
+                game_id = next_to_gtime['href'].strip(self._home_url + self._sub_boxscore_url)
+            else:
+                game_id = None
             return {DATA_MY_SCORE: my_team_score,
                     DATA_OPPONENT_SCORE: opponent_score,
                     DATA_OPPONENT: opponent,
                     DATA_RESULT: result,
                     DATA_GAME_TIME: game_time,
-                    DATA_IS_MY_HOME: is_my_home}
+                    DATA_IS_MY_HOME: is_my_home,
+                    DATA_GAME_ID: game_id}
         except:
             return 'error'
