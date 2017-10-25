@@ -48,8 +48,9 @@ DATA_OPPONENT_SCORE = 'opponent score'
 DATA_OPPONENT = 'opponent'
 DATA_RESULT = 'result'
 DATA_GAME_TIME = 'game time'
-DATA_IS_MY_HOME = 'is my home'
+DATA_SYMBOL = 'symbol'
 DATA_GAME_ID = 'game id'
+DATA_NEXT_GAME = 'next game'
 
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_MY_TEAM = 'my_team'
@@ -145,6 +146,8 @@ class HupuNbaSensor(Entity):
             if data[DATA_GAME_ID] is not None:
                 attrs['boxscore'] = self.hupunba_data.boxscore_url
                 attrs['recap'] = self.hupunba_data.recap_url
+            if data[DATA_NEXT_GAME] is not None:
+                attrs['next game'] = data[DATA_NEXT_GAME]
         return attrs
 
     def update(self):
@@ -154,11 +157,7 @@ class HupuNbaSensor(Entity):
             my_score = data[DATA_MY_SCORE]
             opponent_score = data[DATA_OPPONENT_SCORE]
             opponent = data[DATA_OPPONENT]
-            is_my_home = data[DATA_IS_MY_HOME]
-            if is_my_home:
-                symbol = 'VS'
-            else:
-                symbol = '@'
+            symbol = data[DATA_SYMBOL]
             self._state = '{0} {1} {2} {3} {4}'.format(TEAM_MAP[self.my_team], my_score,
                                                        symbol, opponent_score, opponent)
 
@@ -193,38 +192,62 @@ class HupuNbaData(object):
         soup = BeautifulSoup(rep.text, 'html.parser')
         schedule_soup = soup.find('table', class_='players_table')
         the_day = date.today()
-        game_data = self._get_game_of_day(schedule_soup, the_day)
+        game_soup= self._get_game_soup_of_day(schedule_soup, the_day)
         retry = 0
-        while game_data is None:
+        while game_soup is None:
             the_day += timedelta(days=-1)
-            game_data = self._get_game_of_day(schedule_soup, the_day)
+            game_soup = self._get_game_soup_of_day(schedule_soup, the_day)
             retry += 1
             if retry > 5:
                 break
-        if game_data is None or game_data == 'error':
-            _LOGGER.error('Failed to get the game on %s, game data: %s', the_day, game_data)
+        if game_soup is None or game_soup == 'error':
+            _LOGGER.error('Failed to get the game on %s, game data: %s.', the_day, game_soup)
             return
+        game_data = self._get_game_data(game_soup)
+        if game_data is None:
+            _LOGGER.error('Failed to get the game on %s.', the_day)
+            return
+        data = game_data
+        data[DATA_NEXT_GAME] = None
         self.data = game_data
+        try:
+            next_game_soup = game_soup.find_next('tr')
+            next_game_data = self._get_game_data(next_game_soup)
+            opponent = next_game_data[DATA_OPPONENT]
+            game_time = next_game_data[DATA_GAME_TIME][5:-3]
+            symbol = next_game_data[DATA_SYMBOL]
+            next_game = '{0} {1} {2} {3}'.format(TEAM_MAP[self.my_team], symbol, opponent, game_time)
+            self.data[DATA_NEXT_GAME] = next_game
+        except:
+            # Ignore the next game
+            pass
 
-    def _get_game_of_day(self, schedule_soup, day):
+    def _get_game_soup_of_day(self, schedule_soup, day):
         day_str = day.strftime('%Y-%m-%d')
         pat_day = re.compile(day_str)
         day_tb = schedule_soup.find('td', text=pat_day)
         if day_tb is None:
             return None
         try:
-            game_time = day_tb.text
             game_tr = day_tb.find_parent('tr')
-            teams = game_tr.find('td')
-            guest_team = teams.find('a')
+            return game_tr
+        except:
+            return 'error'
+
+    def _get_game_data(self, game_soup):
+        try:
+            teams_soup = game_soup.find('td')
+            guest_team = teams_soup.find('a')
             if guest_team.text == TEAM_MAP[self.my_team]:
                 is_my_home = False
+                symbol = '@'
                 opponent = guest_team.find_next('a').text
             else:
                 is_my_home = True
+                symbol = 'VS'
                 opponent = guest_team.text
-            scores = teams.find_next('td')
-            scores_list = re.findall(PAT_SCORE, scores.text)
+            scores_soup = teams_soup.find_next('td')
+            scores_list = re.findall(PAT_SCORE, scores_soup.text)
             is_start = len(scores_list) > 1
             if is_start:
                 if is_my_home:
@@ -235,20 +258,25 @@ class HupuNbaData(object):
                     opponent_score = scores_list[1]
             else:
                 my_team_score = opponent_score = 0
-            result = scores.find_next('td').text.strip()
+            result_soup = scores_soup.find_next('td')
+            result = result_soup.text.strip()
             if result not in RESULTS:
                 result = 'N/A'
-            next_to_gtime = day_tb.find_next('a')
+            time_soup = result_soup.find_next('td')
+            game_time = time_soup.text
+            next_to_gtime = time_soup.find_next('a')
             if next_to_gtime.text == '数据统计':
                 game_id = next_to_gtime['href'].strip(self._home_url + self._sub_boxscore_url)
             else:
                 game_id = None
-            return {DATA_MY_SCORE: my_team_score,
-                    DATA_OPPONENT_SCORE: opponent_score,
-                    DATA_OPPONENT: opponent,
-                    DATA_RESULT: result,
-                    DATA_GAME_TIME: game_time,
-                    DATA_IS_MY_HOME: is_my_home,
-                    DATA_GAME_ID: game_id}
+            return {
+                DATA_MY_SCORE: my_team_score,
+                DATA_OPPONENT_SCORE: opponent_score,
+                DATA_OPPONENT: opponent,
+                DATA_RESULT: result,
+                DATA_GAME_TIME: game_time,
+                DATA_SYMBOL: symbol,
+                DATA_GAME_ID: game_id
+            }
         except:
-            return 'error'
+            return None
