@@ -158,8 +158,11 @@ class HupuNbaSensor(Entity):
             opponent_score = data[DATA_OPPONENT_SCORE]
             opponent = data[DATA_OPPONENT]
             symbol = data[DATA_SYMBOL]
-            self._state = '{0} {1} {2} {3} {4}'.format(TEAM_MAP[self.my_team], my_score,
-                                                       symbol, opponent_score, opponent)
+            status = ''
+            if data[DATA_RESULT] in RESULTS:
+                status = '○'
+            self._state = '{0} {1} {2} {3} {4} {5}'.format(TEAM_MAP[self.my_team], my_score,
+                                                           symbol, opponent_score, opponent, status)
 
 
 class HupuNbaData(object):
