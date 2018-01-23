@@ -18,7 +18,7 @@
     Sep.22th 2017
 
 # Last Modified:
-    Sep.27th 2017
+    Jan.23th 2018
 '''
 
 import logging
@@ -140,7 +140,8 @@ class WeiboData(object):
                 if tab['tab_type'] == 'weibo':
                     container_id = tab['containerid']
         except Exception as ex:
-            _LOGGER.error('Failed to get containerid', ex)
+            _LOGGER.error('Failed to get containerid')
+            _LOGGER.exception(ex)
             return
         # Get user weibo index
         self._target_info = 'https://m.weibo.cn/api/container/getIndex?uid={0}&type=uid&value={1}&containerid={2}'.format(self.user_id, self.user_id, container_id)
@@ -152,7 +153,8 @@ class WeiboData(object):
                     latest_card = card
                     break
         except Exception as ex:
-            _LOGGER.error('Failed to get latest weibo', ex)
+            _LOGGER.error('Failed to get latest weibo')
+            _LOGGER.exception(ex)
             return
         if latest_card is None:
             _LOGGER.error('No any cards')
