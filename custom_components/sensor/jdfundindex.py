@@ -143,6 +143,7 @@ class JdFundIndexData(object):
         self.data['index'] = json_data['heat']
         self.data['index_date'] = json_data['degreeDateStr'][0:10]
         self.data['summary'] = json_data['shareAdvise']
+        self.data['hot_list'] = None
 
         resp = None
         try:
