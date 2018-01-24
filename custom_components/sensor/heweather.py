@@ -16,7 +16,7 @@
     Aug.24th 2017
 
 # Last Modified:
-    Oct.11th 2017
+    Jan.24th 2018
 '''
 
 import logging
@@ -337,7 +337,7 @@ class HeWeatherData(object):
         try:
             resp = requests.get(url)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky. %s", error)
+            _LOGGER.error("Unable to connect to He Weather. %s", error)
             return
         if resp.status_code != 200:
             _LOGGER.error('http error: %s', resp.status_code)
